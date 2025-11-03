@@ -15,6 +15,7 @@ Focus on core functionality, implementing local management of QEMU configuration
 - Execute configuration: `vex exec <name>` —— Directly execute saved configurations, one-click QEMU startup;
 - View configurations: `vex list` —— List all saved configurations;
 - Delete configuration: `vex rm <name>` —— Remove unused configurations, keeping the local environment clean.
+- Edit configuration: `vex edit <name>` —— Modify the configuration interactively, with an option to test-run (trial execution) after editing. 
 
 ## Phase 2: Implementing Remote Configuration Distribution
 
