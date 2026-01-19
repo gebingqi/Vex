@@ -11,7 +11,8 @@ use clap::Parser;
 
 use commands::{Cli, Commands};
 use commands::{
-    exec_command, list_command, print_command, remove_command, rename_command, save_command,
+    completions_command, exec_command, list_command, print_command, remove_command, rename_command,
+    save_command,
 };
 
 /// Main application logic
@@ -32,5 +33,6 @@ pub fn run() -> Result<()> {
             args.qemu_bin,
             args.qemu_args,
         ),
+        Commands::Completions(args) => completions_command(args.shell),
     }
 }

@@ -1,3 +1,4 @@
+pub mod completions;
 pub mod exec;
 pub mod list;
 pub mod print;
@@ -5,6 +6,7 @@ pub mod remove;
 pub mod rename;
 pub mod save;
 
+pub use completions::{CompletionsArgs, completions_command};
 pub use exec::{ExecArgs, exec_command};
 pub use list::{ListArgs, list_command};
 pub use print::{PrintArgs, print_command};
@@ -22,6 +24,7 @@ pub enum Commands {
     List(ListArgs),
     Print(PrintArgs),
     Exec(ExecArgs),
+    Completions(CompletionsArgs),
 }
 
 #[derive(Parser)]
