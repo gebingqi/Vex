@@ -8,7 +8,8 @@ use tempfile::Builder;
 
 use crate::commands::exec::exec_command;
 use crate::config::{QemuConfig, config_file};
-use crate::utils::io::prompt_user;
+// 引入 prompt_user_default_no
+use crate::utils::io::prompt_user_default_no;
 
 #[derive(Args, Debug)]
 /// Edit a saved configuration interactively
@@ -22,14 +23,8 @@ use crate::utils::io::prompt_user;
 /// # Examples
 ///
 /// Edit a configuration:
-/// ```shell
 ///   vex edit my-vm
-/// ```
 pub struct EditArgs {
-    /// Configuration name to edit.
-    ///
-    /// Opens the configuration file in your default system editor ($EDITOR).
-    /// After saving, it validates the JSON format and asks if you want to test-run it.
     pub name: String,
 }
 
@@ -61,17 +56,19 @@ pub fn edit_command(name: String) -> Result<()> {
         }
     });
 
-    let mut editor_parts = editor.split_whitespace();
-    let program = editor_parts
-        .next()
-        .unwrap_or(if cfg!(windows) { "notepad" } else { "vim" });
-
-    // Open the editor
-    let status = Command::new(program)
-        .args(editor_parts)
-        .arg(&temp_path)
-        .status()
-        .with_context(|| format!("Failed to open editor: {}", editor))?;
+    let status = if cfg!(windows) {
+        Command::new("cmd")
+            .arg("/C")
+            .arg(format!("{} \"{}\"", editor, temp_path.display()))
+            .status()
+            .with_context(|| format!("Failed to open editor: {}", editor))?
+    } else {
+        Command::new("sh")
+            .arg("-c")
+            .arg(format!("{} \"{}\"", editor, temp_path.display()))
+            .status()
+            .with_context(|| format!("Failed to open editor: {}", editor))?
+    };
 
     if !status.success() {
         anyhow::bail!("Editor exited with an error status.");
@@ -94,9 +91,8 @@ pub fn edit_command(name: String) -> Result<()> {
             fs::write(&config_path, formatted_json).context("Failed to save updated config")?;
             println!("Configuration '{}' updated successfully.", name);
 
-            // Ask if the user wants to test-run it
-            println!("\nDo you want to test-run this configuration now? [Y/n]");
-            if prompt_user()? {
+            println!("\nDo you want to test-run this configuration now? [y/N]");
+            if prompt_user_default_no()? {
                 println!("Starting test-run for '{}'...\n", name);
                 // Call the existing exec_command logic
                 exec_command(name, false, false)?;
