@@ -11,8 +11,8 @@ use crate::commands::Cli;
 /// Outputs the completion script for the specified shell to standard output.
 /// Supported shells include: bash, zsh, fish, powershell, and elvish.
 ///
-/// Vex provides advanced dynamic completions for Bash, Zsh, and Fish, 
-/// allowing you to seamlessly autocomplete your saved configuration names 
+/// Vex provides advanced dynamic completions for Bash, Zsh, and Fish,
+/// allowing you to seamlessly autocomplete your saved configuration names
 /// when using commands like `exec`, `edit`, `rename`, and `rm`.
 ///
 /// # Examples

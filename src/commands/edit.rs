@@ -14,8 +14,8 @@ use crate::utils::io::prompt_user;
 /// Edit a saved configuration interactively
 ///
 /// Opens the JSON configuration file in your system's default text editor ($EDITOR).
-/// 
-/// Vex uses a secure editing workflow: it modifies a temporary file and strictly 
+///
+/// Vex uses a secure editing workflow: it modifies a temporary file and strictly
 /// validates the JSON syntax before applying any changes to your actual configuration.
 /// After a successful edit, it optionally allows you to test-run the VM.
 ///
@@ -62,12 +62,14 @@ pub fn edit_command(name: String) -> Result<()> {
     });
 
     let mut editor_parts = editor.split_whitespace();
-    let program = editor_parts.next().unwrap_or(if cfg!(windows) { "notepad" } else { "vim" });
+    let program = editor_parts
+        .next()
+        .unwrap_or(if cfg!(windows) { "notepad" } else { "vim" });
 
     // Open the editor
     let status = Command::new(program)
-        .args(editor_parts) 
-        .arg(&temp_path) 
+        .args(editor_parts)
+        .arg(&temp_path)
         .status()
         .with_context(|| format!("Failed to open editor: {}", editor))?;
 
