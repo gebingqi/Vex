@@ -8,7 +8,6 @@ use tempfile::Builder;
 
 use crate::commands::exec::exec_command;
 use crate::config::{QemuConfig, config_file};
-// 引入 prompt_user_default_no
 use crate::utils::io::prompt_user_default_no;
 
 #[derive(Args, Debug)]
