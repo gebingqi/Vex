@@ -11,8 +11,8 @@ use clap::Parser;
 
 use commands::{Cli, Commands};
 use commands::{
-    completions_command, exec_command, list_command, print_command, remove_command, rename_command,
-    save_command,
+    completions_command, edit_command, exec_command, list_command, print_command, remove_command,
+    rename_command, save_command,
 };
 
 /// Main application logic
@@ -23,6 +23,7 @@ pub fn run() -> Result<()> {
         Commands::List(_) => list_command(),
         Commands::Print(args) => print_command(args.name),
         Commands::Rm(args) => remove_command(args.name),
+        Commands::Edit(args) => edit_command(args.name),
         Commands::Rename(args) => {
             rename_command(args.desc, args.force, args.old_name, args.new_name)
         }

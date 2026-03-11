@@ -8,37 +8,17 @@ use crate::commands::Cli;
 #[derive(Args, Debug)]
 pub struct CompletionsArgs {
     /// Shell type to generate completions for.
-    ///
-    /// Supported shells: bash, zsh, fish, powershell, elvish.
-    ///
-    /// # Examples
-    ///
-    /// Load completions for current session (Bash):
-    /// ```shell
-    /// source <(vex completions bash)
-    /// ```
-    ///
-    /// Install completions permanently (Bash):
-    /// ```shell
-    /// vex completions bash > ~/.local/share/bash-completion/completions/vex
-    /// ```
-    ///
-    /// Install completions (Zsh):
-    /// ```shell
-    /// vex completions zsh > /usr/local/share/zsh/site-functions/_vex
-    /// ```
     pub shell: clap_complete::Shell,
 }
 
 pub fn completions_command(shell: Shell) -> Result<()> {
     let mut cmd = Cli::command();
-    // bin_name = Vex
     let bin_name = cmd.get_name().to_string();
-    println!("Generating completion script for {}", bin_name);
-    // Generate base completion script
+
+    eprintln!("Generating completion script for {}", bin_name);
+
     generate(shell, &mut cmd, bin_name.clone(), &mut io::stdout());
 
-    // Add dynamic completion for bash, zsh, fish
     match shell {
         Shell::Bash => print_bash_dynamic_completion(&bin_name),
         Shell::Zsh => print_zsh_dynamic_completion(&bin_name),
@@ -58,35 +38,29 @@ fn print_bash_dynamic_completion(bin_name: &str) {
     println!(
         r#"
 # === Dynamic configuration name completion ===
-# Extract configuration names from vex list output
 _vex_get_configs() {{
     {bin_name} list 2>/dev/null | grep ' - ' | awk '{{print $1}}'
 }}
 
-# Save original completion function
 _vex_original=$(declare -f _vex)
-eval "${{_vex_original//_vex()/_vex_base()}}"
+eval "${{_vex_original/_vex/_vex_base}}"
 
-# Enhanced completion function
 _vex() {{
     local cur prev subcmd
     COMPREPLY=()
     cur="${{COMP_WORDS[COMP_CWORD]}}"
     prev="${{COMP_WORDS[COMP_CWORD-1]}}"
 
-    # Check if configuration name completion is needed
     if [[ ${{COMP_CWORD}} -ge 2 ]]; then
         subcmd="${{COMP_WORDS[1]}}"
         case "$subcmd" in
-            exec|rm)
-                # First argument for exec and rm is configuration name
+            exec|rm|edit)
                 if [[ ${{COMP_CWORD}} -eq 2 ]]; then
                     COMPREPLY=( $(compgen -W "$(_vex_get_configs)" -- "${{cur}}") )
                     return 0
                 fi
                 ;;
             rename)
-                # First argument for rename is old configuration name
                 if [[ ${{COMP_CWORD}} -eq 2 ]]; then
                     COMPREPLY=( $(compgen -W "$(_vex_get_configs)" -- "${{cur}}") )
                     return 0
@@ -95,9 +69,10 @@ _vex() {{
         esac
     fi
 
-    # Fall back to base completion
-    _vex_base
+    _vex_base "$@"
 }}
+
+complete -F _vex {bin_name}
 "#,
         bin_name = bin_name
     );
@@ -113,9 +88,9 @@ _vex_configs() {{
     _describe 'configurations' configs
 }}
 
-# Enhanced _vex function
 _vex() {{
     local line state
+    local -a cmds
 
     _arguments -C \
         "1: :->cmds" \
@@ -123,21 +98,27 @@ _vex() {{
 
     case "$state" in
         cmds)
-            _values "vex command" \
-                "save[Save QEMU configuration]" \
-                "rename[Rename a saved QEMU configuration]" \
-                "rm[Remove a saved QEMU configuration]" \
-                "list[List all saved QEMU configurations]" \
-                "exec[Execute a saved QEMU configuration]" \
-                "completions[Generate shell completion scripts]"
+            cmds=(
+                "save:Save QEMU configuration"
+                "rename:Rename a saved QEMU configuration"
+                "rm:Remove a saved QEMU configuration"
+                "list:List all saved QEMU configurations"
+                "print:Print details of a configuration"
+                "exec:Execute a saved QEMU configuration"
+                "edit:Edit a saved QEMU configuration"
+                "completions:Generate shell completion scripts"
+            )
+            _describe -t commands 'vex command' cmds
             ;;
         args)
-            case $line[1] in
-                exec|rm)
-                    _vex_configs
+            case $words[1] in
+                exec|rm|edit)
+                    if (( CURRENT == 2 )); then
+                        _vex_configs
+                    fi
                     ;;
                 rename)
-                    if [[ $CURRENT -eq 2 ]]; then
+                    if (( CURRENT == 2 )); then
                         _vex_configs
                     fi
                     ;;
@@ -158,13 +139,10 @@ function __vex_configs
     {bin_name} list 2>/dev/null | grep ' - ' | awk '{{print $1}}'
 end
 
-# Add configuration name completion for exec command
+complete -c vex -f
 complete -c vex -n "__fish_seen_subcommand_from exec" -a "(__vex_configs)" -d "Configuration name"
-
-# Add configuration name completion for rm command
 complete -c vex -n "__fish_seen_subcommand_from rm" -a "(__vex_configs)" -d "Configuration name"
-
-# Add configuration name completion for rename command (first argument)
+complete -c vex -n "__fish_seen_subcommand_from edit" -a "(__vex_configs)" -d "Configuration name"
 complete -c vex -n "__fish_seen_subcommand_from rename; and not __fish_seen_subcommand_from (__vex_configs)" -a "(__vex_configs)" -d "Old configuration name"
 "#,
         bin_name = bin_name

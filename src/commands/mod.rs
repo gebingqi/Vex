@@ -1,4 +1,5 @@
 pub mod completions;
+pub mod edit;
 pub mod exec;
 pub mod list;
 pub mod print;
@@ -7,6 +8,7 @@ pub mod rename;
 pub mod save;
 
 pub use completions::{CompletionsArgs, completions_command};
+pub use edit::{EditArgs, edit_command};
 pub use exec::{ExecArgs, exec_command};
 pub use list::{ListArgs, list_command};
 pub use print::{PrintArgs, print_command};
@@ -38,6 +40,9 @@ pub enum Commands {
 
     /// Generate shell completion scripts
     Completions(CompletionsArgs),
+
+    /// Edit a saved configuration interactively
+    Edit(EditArgs),
 }
 
 #[derive(Parser)]
