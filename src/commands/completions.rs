@@ -200,7 +200,7 @@ complete -c vex -f
 complete -c vex -n "__fish_seen_subcommand_from exec" -a "(__vex_configs)" -d "Configuration name"
 complete -c vex -n "__fish_seen_subcommand_from rm" -a "(__vex_configs)" -d "Configuration name"
 complete -c vex -n "__fish_seen_subcommand_from edit" -a "(__vex_configs)" -d "Configuration name"
-complete -c vex -n "__fish_seen_subcommand_from push; and test (count (commandline -opc)) -eq 2" -a "(__vex_configs)" -d "Local configuration name"
+complete -c vex -n "__fish_seen_subcommand_from push; and test (count (commandline -opc)) -eq 3" -a "(__vex_configs)" -d "Local configuration name"
 
 # Add configuration name completion for the first argument of rename
 complete -c vex -n "__fish_seen_subcommand_from rename; and not __fish_seen_subcommand_from (__vex_configs)" -a "(__vex_configs)" -d "Old configuration name"

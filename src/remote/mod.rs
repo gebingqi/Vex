@@ -350,7 +350,27 @@ fn path_to_string(path: &Path) -> Result<String> {
 }
 
 fn is_explicit_git_url(value: &str) -> bool {
-    value.contains("://") || value.starts_with("git@")
+    value.contains("://") || is_scp_style_git_url(value)
+}
+
+fn is_scp_style_git_url(value: &str) -> bool {
+    let Some((prefix, suffix)) = value.split_once(':') else {
+        return false;
+    };
+
+    if prefix.is_empty() || suffix.is_empty() {
+        return false;
+    }
+
+    if prefix.contains('/') || prefix.contains('\\') {
+        return false;
+    }
+
+    if prefix.len() == 1 && prefix.chars().all(|c| c.is_ascii_alphabetic()) {
+        return false;
+    }
+
+    true
 }
 
 #[cfg(test)]
@@ -401,5 +421,11 @@ mod tests {
 
         let url = normalize_remote_url("git@github.com:example/repo.git", cwd).unwrap();
         assert_eq!(url, "git@github.com:example/repo.git");
+
+        let url = normalize_remote_url("alice@git.example.com:team/repo.git", cwd).unwrap();
+        assert_eq!(url, "alice@git.example.com:team/repo.git");
+
+        let url = normalize_remote_url("git.example.com:team/repo.git", cwd).unwrap();
+        assert_eq!(url, "git.example.com:team/repo.git");
     }
 }
