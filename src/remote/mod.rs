@@ -192,6 +192,10 @@ fn validate_segment(label: &str, value: &str) -> Result<()> {
         anyhow::bail!("Remote {} cannot be empty", label);
     }
 
+    if matches!(value, "." | "..") {
+        anyhow::bail!("Remote {} cannot be '.' or '..'", label);
+    }
+
     if value
         .chars()
         .all(|c| c.is_ascii_alphanumeric() || matches!(c, '.' | '-' | '_'))
@@ -212,12 +216,27 @@ fn registry_root() -> PathBuf {
 
 fn remote_url() -> Result<String> {
     match env::var(REMOTE_URL_ENV) {
-        Ok(value) if !value.trim().is_empty() => Ok(value),
+        Ok(value) if !value.trim().is_empty() => {
+            normalize_remote_url(value.trim(), &env::current_dir()?)
+        }
         _ => anyhow::bail!(
             "Remote registry is not configured. Set {} to a Git repository URL or local path",
             REMOTE_URL_ENV
         ),
     }
+}
+
+fn normalize_remote_url(value: &str, cwd: &Path) -> Result<String> {
+    if is_explicit_git_url(value) {
+        return Ok(value.to_string());
+    }
+
+    let remote_path = PathBuf::from(value);
+    if remote_path.is_absolute() {
+        return Ok(value.to_string());
+    }
+
+    path_to_string(&cwd.join(remote_path))
 }
 
 fn remote_branch() -> String {
@@ -330,9 +349,15 @@ fn path_to_string(path: &Path) -> Result<String> {
         .context("Path contains invalid Unicode")
 }
 
+fn is_explicit_git_url(value: &str) -> bool {
+    value.contains("://") || value.starts_with("git@")
+}
+
 #[cfg(test)]
 mod tests {
-    use super::RemoteSpec;
+    use std::path::{Path, PathBuf};
+
+    use super::{RemoteSpec, normalize_remote_url};
 
     #[test]
     fn parse_remote_reference_with_tag() {
@@ -350,5 +375,31 @@ mod tests {
         assert_eq!(spec.name, "demo");
         assert!(spec.tag.is_none());
         assert_eq!(spec.resolved_tag(), "latest");
+    }
+
+    #[test]
+    fn parse_remote_reference_rejects_dot_segments() {
+        let err = RemoteSpec::parse("./demo:v1").unwrap_err().to_string();
+        assert!(err.contains("cannot be '.' or '..'"));
+
+        let err = RemoteSpec::parse("team/..:v1").unwrap_err().to_string();
+        assert!(err.contains("cannot be '.' or '..'"));
+    }
+
+    #[test]
+    fn normalize_remote_url_resolves_relative_paths_against_cwd() {
+        let cwd = Path::new("/workspace/project");
+        let url = normalize_remote_url("../remote.git", cwd).unwrap();
+        assert_eq!(PathBuf::from(url), cwd.join("../remote.git"));
+    }
+
+    #[test]
+    fn normalize_remote_url_preserves_explicit_git_urls() {
+        let cwd = Path::new("/workspace/project");
+        let url = normalize_remote_url("https://github.com/example/repo.git", cwd).unwrap();
+        assert_eq!(url, "https://github.com/example/repo.git");
+
+        let url = normalize_remote_url("git@github.com:example/repo.git", cwd).unwrap();
+        assert_eq!(url, "git@github.com:example/repo.git");
     }
 }
