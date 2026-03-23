@@ -3,6 +3,8 @@ pub mod edit;
 pub mod exec;
 pub mod list;
 pub mod print;
+pub mod pull;
+pub mod push;
 pub mod remove;
 pub mod rename;
 pub mod save;
@@ -12,6 +14,8 @@ pub use edit::{EditArgs, edit_command};
 pub use exec::{ExecArgs, exec_command};
 pub use list::{ListArgs, list_command};
 pub use print::{PrintArgs, print_command};
+pub use pull::{PullArgs, pull_command};
+pub use push::{PushArgs, push_command};
 pub use remove::{RemoveArgs, remove_command};
 pub use rename::{RenameArgs, rename_command};
 pub use save::{SaveArgs, save_command};
@@ -34,6 +38,12 @@ pub enum Commands {
 
     /// Print details of a configuration
     Print(PrintArgs),
+
+    /// Pull a shared configuration from the remote registry
+    Pull(PullArgs),
+
+    /// Push a local configuration to the remote registry
+    Push(PushArgs),
 
     /// Execute a saved configuration
     Exec(ExecArgs),

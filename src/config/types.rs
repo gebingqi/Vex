@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 
 /// Stored QEMU configuration structure
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct QemuConfig {
     /// Path to QEMU executable
     pub qemu_bin: String,

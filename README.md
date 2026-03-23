@@ -15,6 +15,21 @@ Vex supports custom configuration storage location through the `VEX_CONFIG_DIR` 
 
 This allows for flexible configuration management across different environments and use cases.
 
+## VEX_REMOTE_URL
+
+Phase 2 remote distribution uses a Git repository as the remote registry backend.
+
+- If `VEX_REMOTE_URL` is set: `vex push` and `vex pull` will use that Git repository URL or local repository path as the remote registry
+- If `VEX_REMOTE_URL` is not set: `vex push` and `vex pull` will fail with a configuration error
+
+Optional environment variables:
+
+- `VEX_REMOTE_BRANCH`: Branch to use for remote distribution. Defaults to `main`
+- `VEX_REMOTE_GIT_NAME`: Git author name used when `vex push` creates a commit
+- `VEX_REMOTE_GIT_EMAIL`: Git author email used when `vex push` creates a commit
+
+Remote configurations are stored under `configs/<id>/<name>/<tag>.json` inside the remote repository. When you push an explicit tag such as `v1`, Vex also refreshes `configs/<id>/<name>/latest.json` so `vex pull <id/name>` can resolve the latest published version.
+
 # Roadmap
 
 ## Phase 1: Building Basic Command Capabilities
