@@ -98,6 +98,13 @@ _vex() {{
                     return 0
                 fi
                 ;;
+            push)
+                # Second argument for push is the local configuration name
+                if [[ ${{COMP_CWORD}} -eq 3 ]]; then
+                    COMPREPLY=( $(compgen -W "$(_vex_get_configs)" -- "${{cur}}") )
+                    return 0
+                fi
+                ;;
         esac
     fi
 
@@ -141,6 +148,8 @@ _vex() {{
                 "rm:Remove a saved QEMU configuration"
                 "list:List all saved QEMU configurations"
                 "print:Print details of a configuration"
+                "pull:Pull a shared configuration from the remote registry"
+                "push:Push a local configuration to the remote registry"
                 "exec:Execute a saved QEMU configuration"
                 "edit:Edit a saved QEMU configuration"
                 "completions:Generate shell completion scripts"
@@ -158,6 +167,11 @@ _vex() {{
                     ;;
                 rename)
                     if (( CURRENT == 2 )); then
+                        _vex_configs
+                    fi
+                    ;;
+                push)
+                    if (( CURRENT == 3 )); then
                         _vex_configs
                     fi
                     ;;
@@ -186,6 +200,7 @@ complete -c vex -f
 complete -c vex -n "__fish_seen_subcommand_from exec" -a "(__vex_configs)" -d "Configuration name"
 complete -c vex -n "__fish_seen_subcommand_from rm" -a "(__vex_configs)" -d "Configuration name"
 complete -c vex -n "__fish_seen_subcommand_from edit" -a "(__vex_configs)" -d "Configuration name"
+complete -c vex -n "__fish_seen_subcommand_from push; and test (count (commandline -opc)) -eq 2" -a "(__vex_configs)" -d "Local configuration name"
 
 # Add configuration name completion for the first argument of rename
 complete -c vex -n "__fish_seen_subcommand_from rename; and not __fish_seen_subcommand_from (__vex_configs)" -a "(__vex_configs)" -d "Old configuration name"
